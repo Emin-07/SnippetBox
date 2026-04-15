@@ -1,0 +1,77 @@
+package models
+
+import (
+	"database/sql"
+	"errors"
+	"strings"
+	"time"
+
+	"github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
+	"golang.org/x/crypto/bcrypt"
+)
+
+type User struct {
+	ID             int
+	Name           string
+	Email          string
+	HashedPassword []byte
+	Created        time.Time
+}
+
+type UserModel struct {
+	DB *sqlx.DB
+}
+
+func (m *UserModel) Insert(name string, email string, password string) error {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	if err != nil {
+		return err
+	}
+
+	_, err = m.DB.Exec(`INSERT INTO users (name, email, hashed_password, created)VALUES(?, ? , ?, UTC_TIMESTAMP())`, name, email, hashedPassword)
+	if err != nil {
+		var mySQLError *mysql.MySQLError
+		if errors.As(err, &mySQLError) {
+			if mySQLError.Number == 1062 && strings.Contains(mySQLError.Message, "users_uc_email") {
+				return ErrDuplicateEmail
+			}
+		}
+		return err
+	}
+	return nil
+}
+
+func (m *UserModel) Authenticate(email, password string) (int, error) {
+
+	var id int
+	var hashedPassword []byte
+	err := m.DB.QueryRow("SELECT id, hashed_password FROM users WHERE email = ?", email).Scan(&id, &hashedPassword)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, ErrInvalidCredentials
+		} else {
+			return 0, err
+		}
+	}
+
+	err = bcrypt.CompareHashAndPassword(hashedPassword, []byte(password))
+	if err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return 0, ErrInvalidCredentials
+		} else {
+			return 0, err
+		}
+	}
+	return id, nil
+}
+func (m *UserModel) Exists() (bool, error) {
+	// users := []*User{}
+	// err := m.DB.Select(&users, `SELECT id, title, email, created, expires FROM users WHERE expires > UTC_TIMESTAMP() ORDER BY id DESC LIMIT 10`)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// return users, nil
+	return false, nil
+}
