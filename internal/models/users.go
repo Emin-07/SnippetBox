@@ -65,13 +65,9 @@ func (m *UserModel) Authenticate(email, password string) (int, error) {
 	}
 	return id, nil
 }
-func (m *UserModel) Exists() (bool, error) {
-	// users := []*User{}
-	// err := m.DB.Select(&users, `SELECT id, title, email, created, expires FROM users WHERE expires > UTC_TIMESTAMP() ORDER BY id DESC LIMIT 10`)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// return users, nil
-	return false, nil
+func (m *UserModel) Exists(id int) (bool, error) {
+	var exists bool
+	stmt := "SELECT EXISTS(SELECT true FROM users WHERE id = ?)"
+	err := m.DB.QueryRow(stmt, id).Scan(&exists)
+	return exists, err
 }
