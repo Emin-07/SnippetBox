@@ -109,6 +109,7 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 	err := app.decodePostForm(r, &form)
 	if err != nil {
 		app.serverError(w, err)
+		return
 	}
 	form.CheckField(validator.NotBlank(form.Name), "name", "Name can't be blank!")
 	form.CheckField(validator.NotBlank(form.Email), "email", "Email can't be blank!")
@@ -202,4 +203,8 @@ func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
 
 	app.sessionManager.Put(r.Context(), "flash", "You've been logged out successfully!")
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func ping(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
 }

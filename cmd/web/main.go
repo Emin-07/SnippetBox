@@ -27,8 +27,8 @@ type config struct {
 type application struct {
 	errorLog       *log.Logger
 	infoLog        *log.Logger
-	snippets       *models.SnippetModel
-	users          *models.UserModel
+	snippets       models.SnippetModelInterface
+	users          models.UserModelInterface
 	templateCache  map[string]*template.Template
 	formDecoder    *form.Decoder
 	sessionManager *scs.SessionManager
@@ -91,7 +91,7 @@ func main() {
 	srv := &http.Server{
 		Addr:      cfg.addr,
 		ErrorLog:  app.errorLog,
-		Handler:   app.routes(&cfg),
+		Handler:   app.routes(),
 		TLSConfig: tlsConfig,
 
 		IdleTimeout: time.Minute,     // reduce keep-alive timeout, can't increase it

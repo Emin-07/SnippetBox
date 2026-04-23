@@ -23,6 +23,12 @@ type UserModel struct {
 	DB *sqlx.DB
 }
 
+type UserModelInterface interface {
+	Insert(name string, email string, password string) error
+	Authenticate(email, password string) (int, error)
+	Exists(id int) (bool, error)
+}
+
 func (m *UserModel) Insert(name string, email string, password string) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
