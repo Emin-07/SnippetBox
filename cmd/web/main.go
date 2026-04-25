@@ -32,14 +32,17 @@ type application struct {
 	templateCache  map[string]*template.Template
 	formDecoder    *form.Decoder
 	sessionManager *scs.SessionManager
+	debug          bool
 }
 
 func main() {
 	var cfg config
 	flag.StringVar(&cfg.addr, "addr", ":4000", "HTTP network address")
 	flag.StringVar(&cfg.staticDir, "static-dir", "./ui/static/", "Path to static assets")
+	debug := flag.Bool("debug", false, "Enable debug mode")
 
 	dsn := flag.String("dsn", "web:pass@/snippetbox?parseTime=true", "MySQL data source name")
+	// dsn := flag.String("dsn", "web:pass@/snippetbox", "MySQL data source name")
 	errorLog := log.New(os.Stderr, "ERROR\t", log.LUTC|log.Ldate|log.Ltime|log.Lshortfile)
 	infoLog := log.New(os.Stdout, "INFO\t", log.LUTC|log.Ldate|log.Ltime)
 
@@ -82,11 +85,10 @@ func main() {
 		templateCache:  templateCache,
 		formDecoder:    formDecoder,
 		sessionManager: sessionManager,
+		debug:          *debug,
 	}
 	tlsConfig := &tls.Config{
 		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
-		//tls.CurveP256 and tls.X25519 have assembly implementations
-		//others are cpu intensive. Just performance imrpocment
 	}
 	srv := &http.Server{
 		Addr:      cfg.addr,
