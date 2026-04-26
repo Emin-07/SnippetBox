@@ -19,8 +19,8 @@ CREATE TABLE users(
 ALTER TABLE users ADD CONSTRAINT users_uc_email UNIQUE (email);
 
 INSERT INTO users (name, email, hashed_password, created) VALUES (
-    'Alice Jones',
-    'alice@example.com',
-    '$2a$12$NuTjWXm3KKntReFwyBVHyuf/to.HEwTy.eS206TNfkGfr6HzGJSWG',
+    'Mocker',
+    'mocker@email.com',
+    '$$2a$12$rvsOpIiQwzmp/r2OF4sHjemIQoXOx3YrtPRF0zvCCajaU0AxqIYPu',
     '2022-01-01 10:00:00'
 );
