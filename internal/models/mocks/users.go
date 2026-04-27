@@ -1,6 +1,8 @@
 package mocks
 
 import (
+	"time"
+
 	"snippetbox.net/internal/models"
 )
 
@@ -28,5 +30,17 @@ func (m *UserModel) Exists(id int) (bool, error) {
 		return true, nil
 	default:
 		return false, nil
+	}
+}
+
+func (m *UserModel) Get(id int) (*models.User, error) {
+	if id == 1 {
+		return &models.User{ID: 1,
+			Name:           "Mocker",
+			Email:          "mocker@email.com",
+			HashedPassword: []byte("$$2a$12$rvsOpIiQwzmp/r2OF4sHjemIQoXOx3YrtPRF0zvCCajaU0AxqIYPu"),
+			Created:        time.Date(2022, time.January, 1, 10, 0, 0, 0, time.UTC)}, nil
+	} else {
+		return nil, models.ErrNoRecord
 	}
 }

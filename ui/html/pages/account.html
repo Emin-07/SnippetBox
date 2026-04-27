@@ -1,0 +1,21 @@
+{{define "title"}}Your Account - Snippetbox{{end}}
+
+{{define "main"}}
+<h2>Your Account</h2>
+<table>
+    {{with .User}}
+    <tr>
+        <th>Name</th>
+        <td>{{.Name}}</td>
+    </tr>
+    <tr>
+        <th>Email</th>
+        <td>{{.Email}}</td>
+    </tr>
+    <tr>
+        <th>Joined</th>
+        <td>{{humanDate .Created}}</td>
+    </tr>
+    {{end}}
+</table>
+{{end}}

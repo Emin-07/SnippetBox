@@ -26,6 +26,22 @@ func (app *application) about(w http.ResponseWriter, r *http.Request) {
 	app.render(w, http.StatusOK, "about.html", app.newTemplateData(r))
 }
 
+func (app *application) accountView(w http.ResponseWriter, r *http.Request) {
+	currentUserId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	user, err := app.users.Get(currentUserId)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+	data := app.newTemplateData(r)
+	data.User = user
+	app.render(w, http.StatusOK, "account.html", data)
+}
+
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	params := httprouter.ParamsFromContext(r.Context())
 	id, err := strconv.Atoi(params.ByName("id"))
@@ -194,7 +210,13 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 	}
 	app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
 
-	http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
+	path := app.sessionManager.PopString(r.Context(), "redirectPathAfterLogin")
+	if path != "" {
+		http.Redirect(w, r, path, http.StatusSeeOther)
+	} else {
+		http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
+	}
+
 }
 
 func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
