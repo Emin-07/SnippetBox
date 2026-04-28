@@ -231,6 +231,55 @@ func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
+type PasswordChangeForm struct {
+	CurrentPassword    string `form:"currentPassword"`
+	NewPassword        string `form:"newPassword"`
+	ConfirmNewPassword string `form:"confirmNewPassword"`
+	validator.Validator
+}
+
+func (app *application) ChangeAccountPassword(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+	data.Form = PasswordChangeForm{}
+	app.render(w, http.StatusOK, "password_change.html", data)
+}
+
+func (app *application) ChangeAccountPasswordPost(w http.ResponseWriter, r *http.Request) {
+	passwordForm := PasswordChangeForm{}
+	if err := app.decodePostForm(r, &passwordForm); err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	passwordForm.CheckField(validator.NotBlank(passwordForm.CurrentPassword), "current_password", "this field can't be blank")
+	passwordForm.CheckField(validator.NotBlank(passwordForm.NewPassword), "new_password", "this field can't be blank")
+	passwordForm.CheckField(validator.NotBlank(passwordForm.ConfirmNewPassword), "confirm_new_password", "this field can't be blank")
+	passwordForm.CheckField(validator.MinChars(passwordForm.NewPassword, 8), "new_password", "Password should be at least 8 characters long!")
+
+	if !passwordForm.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = passwordForm
+		app.render(w, http.StatusUnprocessableEntity, "password_change.html", data)
+		return
+	}
+
+	id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	if err := app.users.ChangePassword(id, passwordForm.CurrentPassword, passwordForm.NewPassword); err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	err := app.sessionManager.RenewToken(r.Context())
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	app.sessionManager.Remove(r.Context(), "authenticatedUserID")
+
+	app.sessionManager.Put(r.Context(), "flash", "Password was changed successfully")
+	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+}
+
 func ping(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
 }
