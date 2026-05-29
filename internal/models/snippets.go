@@ -9,11 +9,9 @@ import (
 )
 
 type Snippet struct {
-	ID      int
-	Title   string
-	Content string
-	Created time.Time
-	Expires time.Time
+	ID               int
+	Title, Content   string
+	Created, Expires time.Time
 }
 
 type SnippetModel struct {
